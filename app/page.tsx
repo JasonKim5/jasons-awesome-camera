@@ -17,14 +17,6 @@ export default function Home() {
       .then(data => setMedia(data));
   }, []);
 
-  const handleDownload = async (url: string, filename: string) => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  };
 
   return (
     <main style={{ background: '#4f6d3a', minHeight: '100vh', padding: '2rem' }}>
@@ -47,23 +39,6 @@ export default function Home() {
             ) : (
               <img onClick={() => setSelected(item)} src={item.secure_url} alt={item.public_id} style={{ width: '100%', display: 'block' }} />
             )}
-            {/* Download Button */}
-            <button
-              onClick={() => handleDownload(item.secure_url, item.public_id)}
-              style={{
-                position: 'absolute',
-                bottom: '0.5rem',
-                right: '0.5rem',
-                background: 'rgba(0,0,0,0.7)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '0.4rem 0.7rem',
-                cursor: 'pointer',
-                fontSize: '0.85rem'
-              }}>
-              ⬇ Download
-            </button>
           </div>
         ))}
       </div>
