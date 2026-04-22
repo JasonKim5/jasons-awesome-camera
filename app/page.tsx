@@ -1,8 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+interface MediaItem {
+  public_id: string;
+  secure_url: string;
+  resource_type: string;
+}
+
 export default function Home() {
-  const [media, setMedia] = useState([]);
+  const [media, setMedia] = useState<MediaItem[]>([]);
 
   useEffect(() => {
     fetch('/api/photos')
@@ -11,7 +17,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main style={{ background: '#4f6d3a', minHeight: '100vh', padding: '2rem' }}>
+    <main style={{ background: '#111', minHeight: '100vh', padding: '2rem' }}>
       <h1 style={{ 
         color: 'white', 
         textAlign: 'center', 
@@ -39,7 +45,7 @@ export default function Home() {
       </div>
       {media.length === 0 && (
         <p style={{ color: 'gray', textAlign: 'center', marginTop: '4rem' }}>
-          No photos yet — upload some to Cloudinary to get started!
+          No photos yet!
         </p>
       )}
     </main>
