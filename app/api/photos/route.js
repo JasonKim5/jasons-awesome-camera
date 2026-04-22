@@ -6,16 +6,21 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function GET() {
-  try {
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      max_results: 100,
-    });
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const file = formData.get('file') as File;
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
 
-    return Response.json(result.resources);
-  } catch (error) {
-    console.error('Cloudinary error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+  const result = await new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { resource_type: 'auto' },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    ).end(buffer);
+  });
+
+  return Response.json(result);
 }
