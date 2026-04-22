@@ -27,7 +27,7 @@ export default function Home() {
   };
 
   return (
-    <main style={{ background: '#111', minHeight: '100vh', padding: '2rem' }}>
+    <main style={{ background: '#4f6d3a', minHeight: '100vh', padding: '2rem' }}>
       <h1 style={{ color: 'white', textAlign: 'center', marginBottom: '2rem', fontSize: '3rem' }}>
         Jason's Awesome Camera
       </h1>
