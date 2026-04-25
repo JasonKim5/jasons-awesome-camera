@@ -15,8 +15,12 @@ export async function GET() {
 
     const all = [...images.resources, ...videos.resources];
 
-    // Sort by upload date, newest first
-    all.sort((a, b) => b.public_id.localeCompare(a.public_id));
+    // Sort by upload date, newest first ignores type of file
+    all.sort((a, b) => {
+    const numA = parseInt(a.public_id.replace(/\D/g, ''));
+    const numB = parseInt(b.public_id.replace(/\D/g, ''));
+    return numB - numA;
+    });
 
     return Response.json(all);
   } catch (error) {
