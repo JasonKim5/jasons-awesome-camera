@@ -8,11 +8,17 @@ cloudinary.config({
 
 export async function GET() {
   try {
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      max_results: 100,
-    });
-    return Response.json(result.resources);
+    const [images, videos] = await Promise.all([
+      cloudinary.api.resources({ type: 'upload', resource_type: 'image', max_results: 100 }),
+      cloudinary.api.resources({ type: 'upload', resource_type: 'video', max_results: 100 }),
+    ]);
+
+    const all = [...images.resources, ...videos.resources];
+
+    // Sort by upload date, newest first
+    all.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return Response.json(all);
   } catch (error) {
     console.error('Cloudinary error:', error);
     return Response.json([], { status: 200 });
