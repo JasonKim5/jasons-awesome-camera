@@ -16,7 +16,7 @@ export async function GET() {
     const all = [...images.resources, ...videos.resources];
 
     // Sort by upload date, newest first
-    all.sort((a, b) => b.public_id.localeCompare(a.public_id));
+    all.sort((a, b) => a.public_id.localeCompare(b.public_id));
 
     return Response.json(all);
   } catch (error) {
