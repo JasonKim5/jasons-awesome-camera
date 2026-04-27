@@ -89,7 +89,11 @@ export default function Home() {
 
       {/* Lightbox */}
       {selected && (
-        <div onClick={() => setSelected(null)} style={{
+        <div onClick={() => {
+          const video = document.querySelector('video');
+          if (video) video.pause();
+          setSelected(null);
+        }} style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
           background: 'rgba(0,0,0,0.9)', display: 'flex',
           alignItems: 'center', justifyContent: 'center', zIndex: 1000, cursor: 'pointer'
@@ -97,6 +101,8 @@ export default function Home() {
           {selected.resource_type === 'video' ? (
             <video
               controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
               style={{ maxWidth: '90%', maxHeight: '90vh' }}
             >
               <source src={selected.secure_url} type="video/mp4" />
