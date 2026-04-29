@@ -9,17 +9,17 @@ cloudinary.config({
 export async function GET() {
   try {
     const [images, videos] = await Promise.all([
-      cloudinary.api.resources({ type: 'upload', resource_type: 'image', max_results: 100 }),
+      cloudinary.api.resources({ type: 'upload', resource_type: 'image', max_results: 100, image_metadata: true }),
       cloudinary.api.resources({ type: 'upload', resource_type: 'video', max_results: 100 }),
     ]);
 
     const all = [...images.resources, ...videos.resources];
 
-    // Sort by upload date, newest first ignores type of file
     all.sort((a, b) => {
-    const numA = parseInt(a.public_id.replace(/\D/g, ''));
-    const numB = parseInt(b.public_id.replace(/\D/g, ''));
-    return numB - numA;
+      // Try to get EXIF date taken, fall back to upload date
+      const dateA = a.image_metadata?.DateTimeOriginal || a.created_at;
+      const dateB = b.image_metadata?.DateTimeOriginal || b.created_at;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
     });
 
     return Response.json(all);

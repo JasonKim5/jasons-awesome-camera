@@ -113,7 +113,7 @@ export default function Home() {
           )}
           <span style={{ position: 'absolute', top: '1rem', right: '1.5rem', color: 'white', fontSize: '2rem' }}>✕</span>
         </div>
-      )}
+      )} 
     </main>
   );
 }
