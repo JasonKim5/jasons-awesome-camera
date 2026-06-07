@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jason's Dry Plates",
+  title: "me hoy minoy",
   description: "STOP LURKING",
 };
 
