@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "me hoy minoy",
-  description: "STOP LURKING",
+  title: "",
+  description: "",
 };
 
 export default function RootLayout({

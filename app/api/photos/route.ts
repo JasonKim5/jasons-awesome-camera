@@ -6,17 +6,35 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+async function getAllResources(resource_type: string) {
+  let all: any[] = [];
+  let next_cursor: string | undefined = undefined;
+
+  do {
+    const result: any = await cloudinary.api.resources({
+      type: 'upload',
+      resource_type,
+      max_results: 100,
+      image_metadata: resource_type === 'image',
+      next_cursor,
+    });
+    all = [...all, ...result.resources];
+    next_cursor = result.next_cursor;
+  } while (next_cursor);
+
+  return all;
+}
+
 export async function GET() {
   try {
     const [images, videos] = await Promise.all([
-      cloudinary.api.resources({ type: 'upload', resource_type: 'image', max_results: 100, image_metadata: true }),
-      cloudinary.api.resources({ type: 'upload', resource_type: 'video', max_results: 100 }),
+      getAllResources('image'),
+      getAllResources('video'),
     ]);
 
-    const all = [...images.resources, ...videos.resources];
+    const all = [...images, ...videos];
 
     all.sort((a, b) => {
-      // Try to get EXIF date taken, fall back to upload date
       const dateA = a.image_metadata?.DateTimeOriginal || a.created_at;
       const dateB = b.image_metadata?.DateTimeOriginal || b.created_at;
       return new Date(dateB).getTime() - new Date(dateA).getTime();
