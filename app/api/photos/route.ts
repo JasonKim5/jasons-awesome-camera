@@ -15,7 +15,7 @@ async function getAllResources(resource_type: string) {
       type: 'upload',
       resource_type,
       max_results: 100,
-      image_metadata: resource_type === 'image',
+      image_metadata: true,
       next_cursor,
     });
     all = [...all, ...result.resources];
@@ -34,11 +34,18 @@ export async function GET() {
 
     const all = [...images, ...videos];
 
-   all.sort((a, b) => {
-  const dateA = new Date(a.created_at).getTime();
-  const dateB = new Date(b.created_at).getTime();
-  return dateB - dateA;
-});
+    all.sort((a, b) => {
+      // Use EXIF date taken, fall back to upload date if not available
+      const dateA = a.image_metadata?.DateTimeOriginal 
+        ? new Date(a.image_metadata.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')).getTime()
+        : new Date(a.created_at).getTime();
+
+      const dateB = b.image_metadata?.DateTimeOriginal 
+        ? new Date(b.image_metadata.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')).getTime()
+        : new Date(b.created_at).getTime();
+
+      return dateB - dateA;
+    });
 
     return Response.json(all);
   } catch (error) {
