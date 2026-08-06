@@ -35,10 +35,10 @@ export async function GET() {
     const all = [...images, ...videos];
 
    all.sort((a, b) => {
-  const numA = parseInt(a.public_id.replace(/\D/g, ''));
-  const numB = parseInt(b.public_id.replace(/\D/g, ''));
-  return numB - numA; // newest number first
-    });
+  const dateA = new Date(a.created_at).getTime();
+  const dateB = new Date(b.created_at).getTime();
+  return dateB - dateA;
+});
 
     return Response.json(all);
   } catch (error) {
