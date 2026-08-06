@@ -34,10 +34,10 @@ export async function GET() {
 
     const all = [...images, ...videos];
 
-    all.sort((a, b) => {
-      const dateA = a.image_metadata?.DateTimeOriginal || a.created_at;
-      const dateB = b.image_metadata?.DateTimeOriginal || b.created_at;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
+   all.sort((a, b) => {
+  const numA = parseInt(a.public_id.replace(/\D/g, ''));
+  const numB = parseInt(b.public_id.replace(/\D/g, ''));
+  return numB - numA; // newest number first
     });
 
     return Response.json(all);
