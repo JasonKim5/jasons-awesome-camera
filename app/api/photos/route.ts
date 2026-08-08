@@ -62,7 +62,16 @@ export async function GET() {
 
     const all = [...images, ...videos];
 
-    all.sort((a, b) => getDateTaken(b) - getDateTaken(a));
+  
+all.sort((a, b) => {
+  // Extract just the number from filename (works for both DSC and MOV)
+  const getNum = (id: string) => {
+    const match = id.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+  
+  return getNum(b.public_id) - getNum(a.public_id);
+});
 
     return Response.json(all);
   } catch (error) {
