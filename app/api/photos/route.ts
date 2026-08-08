@@ -15,6 +15,8 @@ async function getAllResources(resource_type: string) {
       type: 'upload',
       resource_type,
       max_results: 100,
+      image_metadata: true,
+      media_metadata: true,
       next_cursor,
     });
     all = [...all, ...result.resources];
@@ -22,6 +24,33 @@ async function getAllResources(resource_type: string) {
   } while (next_cursor);
 
   return all;
+}
+
+function getDateTaken(item: any): number {
+  // Try EXIF DateTimeOriginal for photos (format: "2026:08:01 13:31:00")
+  if (item.image_metadata?.DateTimeOriginal) {
+    const fixed = item.image_metadata.DateTimeOriginal
+      .replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+    const date = new Date(fixed).getTime();
+    if (!isNaN(date)) return date;
+  }
+
+  // Try DateTimeDigitized as backup for photos
+  if (item.image_metadata?.DateTimeDigitized) {
+    const fixed = item.image_metadata.DateTimeDigitized
+      .replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+    const date = new Date(fixed).getTime();
+    if (!isNaN(date)) return date;
+  }
+
+  // Try video metadata creation time
+  if (item.image_metadata?.creation_time) {
+    const date = new Date(item.image_metadata.creation_time).getTime();
+    if (!isNaN(date)) return date;
+  }
+
+  // Fall back to upload date
+  return new Date(item.created_at).getTime();
 }
 
 export async function GET() {
@@ -33,16 +62,7 @@ export async function GET() {
 
     const all = [...images, ...videos];
 
-    all.sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-
-      if (dateB !== dateA) return dateB - dateA;
-
-      const numA = parseInt(a.public_id.replace(/\D/g, ''));
-      const numB = parseInt(b.public_id.replace(/\D/g, ''));
-      return numB - numA;
-    });
+    all.sort((a, b) => getDateTaken(b) - getDateTaken(a));
 
     return Response.json(all);
   } catch (error) {
