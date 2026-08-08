@@ -9,16 +9,35 @@ interface MediaItem {
 
 export default function Home() {
   const [media, setMedia] = useState<MediaItem[]>([]);
-  const [selected, setSelected] = useState<MediaItem | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/photos')
       .then(res => res.json())
-      .then(data => {
-        console.log('Media loaded:', data);
-        setMedia(data);
-      });
+      .then(data => setMedia(data));
   }, []);
+
+  const selected = selectedIndex !== null ? media[selectedIndex] : null;
+
+  const goNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedIndex !== null && selectedIndex < media.length - 1) {
+      setSelectedIndex(selectedIndex + 1);
+    }
+  };
+
+  const goPrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedIndex !== null && selectedIndex > 0) {
+      setSelectedIndex(selectedIndex - 1);
+    }
+  };
+
+  const closeLightbox = () => {
+    const video = document.querySelector('video');
+    if (video) video.pause();
+    setSelectedIndex(null);
+  };
 
   return (
     <main style={{ background: '#4f6d3a', minHeight: '100vh', padding: '2rem' }}>
@@ -31,9 +50,9 @@ export default function Home() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
         gap: '1rem'
       }}>
-        {media.map((item) => (
+        {media.map((item, index) => (
           <div key={item.public_id}
-            onClick={() => setSelected(item)}
+            onClick={() => setSelectedIndex(index)}
             style={{
               borderRadius: '8px',
               overflow: 'hidden',
@@ -43,7 +62,7 @@ export default function Home() {
               aspectRatio: '4/3'
             }}>
             {item.resource_type === 'video' ? (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'red' }}>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#333' }}>
                 <img
                   src={item.secure_url.replace('/video/upload/', '/video/upload/so_0/').replace('.mp4', '.jpg')}
                   alt={item.public_id}
@@ -51,14 +70,14 @@ export default function Home() {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
                 <span style={{
-                    position: 'absolute',
-                    width: '60px',
-                    height: '60px',
-                    background: 'rgba(255,255,255,0.9)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                  position: 'absolute',
+                  width: '60px',
+                  height: '60px',
+                  background: 'rgba(255,255,255,0.9)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   <span style={{
                     width: 0,
@@ -89,31 +108,70 @@ export default function Home() {
 
       {/* Lightbox */}
       {selected && (
-        <div onClick={() => {
-          const video = document.querySelector('video');
-          if (video) video.pause();
-          setSelected(null);
-        }} style={{
+        <div onClick={closeLightbox} style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
           background: 'rgba(0,0,0,0.9)', display: 'flex',
           alignItems: 'center', justifyContent: 'center', zIndex: 1000, cursor: 'pointer'
         }}>
+          {/* Previous Button */}
+          {selectedIndex! > 0 && (
+            <button onClick={goPrev} style={{
+              position: 'absolute', left: '1rem',
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none', borderRadius: '50%',
+              width: '50px', height: '50px',
+              color: 'white', fontSize: '1.5rem',
+              cursor: 'pointer', zIndex: 1001
+            }}>‹</button>
+          )}
+
+          {/* Media */}
           {selected.resource_type === 'video' ? (
             <video
               controls
               autoPlay
+              key={selected.secure_url}
               onClick={(e) => e.stopPropagation()}
               style={{ maxWidth: '90%', maxHeight: '90vh' }}
             >
               <source src={selected.secure_url} type="video/mp4" />
             </video>
           ) : (
-            <img src={selected.secure_url} alt={selected.public_id}
-              style={{ maxWidth: '90%', maxHeight: '90vh', objectFit: 'contain' }} />
+            <img
+              src={selected.secure_url}
+              alt={selected.public_id}
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: '90%', maxHeight: '90vh', objectFit: 'contain' }}
+            />
           )}
-          <span style={{ position: 'absolute', top: '1rem', right: '1.5rem', color: 'white', fontSize: '2rem' }}>✕</span>
+
+          {/* Next Button */}
+          {selectedIndex! < media.length - 1 && (
+            <button onClick={goNext} style={{
+              position: 'absolute', right: '1rem',
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none', borderRadius: '50%',
+              width: '50px', height: '50px',
+              color: 'white', fontSize: '1.5rem',
+              cursor: 'pointer', zIndex: 1001
+            }}>›</button>
+          )}
+
+          {/* Close Button */}
+          <span onClick={closeLightbox} style={{
+            position: 'absolute', top: '1rem', right: '1.5rem',
+            color: 'white', fontSize: '2rem', cursor: 'pointer', zIndex: 1001
+          }}>✕</span>
+
+          {/* Counter */}
+          <span style={{
+            position: 'absolute', bottom: '1rem',
+            color: 'white', fontSize: '1rem'
+          }}>
+            {selectedIndex! + 1} / {media.length}
+          </span>
         </div>
-      )} 
+      )}
     </main>
   );
 }

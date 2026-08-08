@@ -16,6 +16,7 @@ async function getAllResources(resource_type: string) {
       resource_type,
       max_results: 100,
       image_metadata: true,
+      media_metadata: true,
       next_cursor,
     });
     all = [...all, ...result.resources];
@@ -23,6 +24,26 @@ async function getAllResources(resource_type: string) {
   } while (next_cursor);
 
   return all;
+}
+
+function getDateTaken(item: any): number {
+  // Try EXIF DateTimeOriginal for photos
+  if (item.image_metadata?.DateTimeOriginal) {
+    const raw = item.image_metadata.DateTimeOriginal;
+    // EXIF format is "YYYY:MM:DD HH:MM:SS" — fix it to be parseable
+    const fixed = raw.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+    const date = new Date(fixed).getTime();
+    if (!isNaN(date)) return date;
+  }
+
+  // Try video metadata creation time
+  if (item.video?.metadata?.creation_time) {
+    const date = new Date(item.video.metadata.creation_time).getTime();
+    if (!isNaN(date)) return date;
+  }
+
+  // Fall back to Cloudinary upload date
+  return new Date(item.created_at).getTime();
 }
 
 export async function GET() {
@@ -34,18 +55,8 @@ export async function GET() {
 
     const all = [...images, ...videos];
 
-    all.sort((a, b) => {
-      // Use EXIF date taken, fall back to upload date if not available
-      const dateA = a.image_metadata?.DateTimeOriginal 
-        ? new Date(a.image_metadata.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')).getTime()
-        : new Date(a.created_at).getTime();
-
-      const dateB = b.image_metadata?.DateTimeOriginal 
-        ? new Date(b.image_metadata.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')).getTime()
-        : new Date(b.created_at).getTime();
-
-      return dateB - dateA;
-    });
+    // Sort by actual date taken, newest first
+    all.sort((a, b) => getDateTaken(b) - getDateTaken(a));
 
     return Response.json(all);
   } catch (error) {
